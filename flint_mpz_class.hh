@@ -2,6 +2,8 @@
 #ifndef flint_mpz_class_hh
 #define flint_mpz_class_hh 1
 
+///#include <stdexcept>
+#include <string>
 #include "flint/fmpz.h"
 
 #define __PPLITE_CONSTANT(X) __builtin_constant_p(X)
@@ -73,7 +75,7 @@ public:
     fmpz_init(mp);
     if (set_str(s, base) != 0) {
       fmpz_clear (mp);
-      throw std::invalid_argument ("fmpz_set_str");
+      ///throw std::invalid_argument ("fmpz_set_str");
     }
   }
   explicit flint_mpz_class(const std::string &s, int base = 0)
@@ -81,7 +83,7 @@ public:
     fmpz_init(mp);
     if (set_str(s.c_str(), base) != 0) {
       fmpz_clear (mp);
-      throw std::invalid_argument ("fmpz_set_str");
+      ///throw std::invalid_argument ("fmpz_set_str");
     }
   }
 
@@ -141,18 +143,19 @@ public:
 #if __cplusplus >= 201103L
   flint_mpz_class & operator=(flint_mpz_class &&z) noexcept { swap(z); return *this; }
 #endif
+  flint_mpz_class & operator=(int l) { assign_si(l); return *this; }
   flint_mpz_class & operator=(signed long l) { assign_si(l); return *this; }
   flint_mpz_class & operator=(unsigned long l) { assign_ui(l); return *this; }
   flint_mpz_class & operator=(double d) { assign_d(d); return *this; }
   flint_mpz_class & operator=(const char *s) {
     if (set_str (s, 0) != 0) {
-      throw std::invalid_argument ("fmpz_set_str");
+      ///throw std::invalid_argument ("fmpz_set_str");
     }
     return *this;
   }
   flint_mpz_class & operator=(const std::string &s) {
     if (set_str(s.c_str(), 0) != 0) {
-      throw std::invalid_argument ("fmpz_set_str");
+      ///throw std::invalid_argument ("fmpz_set_str");
     }
     return *this;
   }
@@ -196,24 +199,30 @@ public:
 #endif*/
 
   // Comparison
-  inline bool operator==(const flint_mpz_class& rhs){ return fmpz_cmp   (mp,rhs.mp) == 0; }
-  inline bool operator==(unsigned long rhs)         { return fmpz_cmp_ui(mp,rhs) == 0; }
-  inline bool operator==(signed long rhs)           { return fmpz_cmp_si(mp,rhs) == 0; }
-  inline bool operator!=(const flint_mpz_class& rhs){ return fmpz_cmp   (mp,rhs.mp) != 0; }
-  inline bool operator!=(unsigned long rhs)         { return fmpz_cmp_ui(mp,rhs) != 0; }
-  inline bool operator!=(signed long rhs)           { return fmpz_cmp_si(mp,rhs) != 0; }
-  inline bool operator< (const flint_mpz_class& rhs){ return fmpz_cmp   (mp,rhs.mp) <  0; }
-  inline bool operator< (unsigned long rhs)         { return fmpz_cmp_ui(mp,rhs) <  0; }
-  inline bool operator< (signed long rhs)           { return fmpz_cmp_si(mp,rhs) <  0; }
-  inline bool operator> (const flint_mpz_class& rhs){ return fmpz_cmp   (mp,rhs.mp) >  0; }
-  inline bool operator> (unsigned long rhs)         { return fmpz_cmp_ui(mp,rhs) >  0; }
-  inline bool operator> (signed long rhs)           { return fmpz_cmp_si(mp,rhs) >  0; }
-  inline bool operator<=(const flint_mpz_class& rhs){ return fmpz_cmp   (mp,rhs.mp) <= 0; }
-  inline bool operator<=(unsigned long rhs)         { return fmpz_cmp_ui(mp,rhs) <= 0; }
-  inline bool operator<=(signed long rhs)           { return fmpz_cmp_si(mp,rhs) <= 0; }
-  inline bool operator>=(const flint_mpz_class& rhs){ return fmpz_cmp   (mp,rhs.mp) >= 0; }
-  inline bool operator>=(unsigned long rhs)         { return fmpz_cmp_ui(mp,rhs) >= 0; }
-  inline bool operator>=(signed long rhs)           { return fmpz_cmp_si(mp,rhs) >= 0; }
+  inline bool operator==(const flint_mpz_class& rhs) const { return fmpz_cmp   (mp,rhs.mp) == 0; }
+  inline bool operator==(unsigned long rhs)          const { return fmpz_cmp_ui(mp,rhs) == 0; }
+  inline bool operator==(signed long rhs)            const { return fmpz_cmp_si(mp,rhs) == 0; }
+  inline bool operator==(int rhs)                    const { return fmpz_cmp_si(mp,rhs) == 0; }
+  inline bool operator!=(const flint_mpz_class& rhs) const { return fmpz_cmp   (mp,rhs.mp) != 0; }
+  inline bool operator!=(unsigned long rhs)          const { return fmpz_cmp_ui(mp,rhs) != 0; }
+  inline bool operator!=(signed long rhs)            const { return fmpz_cmp_si(mp,rhs) != 0; }
+  inline bool operator!=(int rhs)                    const { return fmpz_cmp_si(mp,rhs) != 0; }
+  inline bool operator< (const flint_mpz_class& rhs) const { return fmpz_cmp   (mp,rhs.mp) <  0; }
+  inline bool operator< (unsigned long rhs)          const { return fmpz_cmp_ui(mp,rhs) <  0; }
+  inline bool operator< (signed long rhs)            const { return fmpz_cmp_si(mp,rhs) <  0; }
+  inline bool operator< (int rhs)                    const { return fmpz_cmp_si(mp,rhs) <  0; }
+  inline bool operator> (const flint_mpz_class& rhs) const { return fmpz_cmp   (mp,rhs.mp) >  0; }
+  inline bool operator> (unsigned long rhs)          const { return fmpz_cmp_ui(mp,rhs) >  0; }
+  inline bool operator> (signed long rhs)            const { return fmpz_cmp_si(mp,rhs) >  0; }
+  inline bool operator> (int rhs)                    const { return fmpz_cmp_si(mp,rhs) >  0; }
+  inline bool operator<=(const flint_mpz_class& rhs) const { return fmpz_cmp   (mp,rhs.mp) <= 0; }
+  inline bool operator<=(unsigned long rhs)          const { return fmpz_cmp_ui(mp,rhs) <= 0; }
+  inline bool operator<=(signed long rhs)            const { return fmpz_cmp_si(mp,rhs) <= 0; }
+  inline bool operator<=(int rhs)                    const { return fmpz_cmp_si(mp,rhs) <= 0; }
+  inline bool operator>=(const flint_mpz_class& rhs) const { return fmpz_cmp   (mp,rhs.mp) >= 0; }
+  inline bool operator>=(unsigned long rhs)          const { return fmpz_cmp_ui(mp,rhs) >= 0; }
+  inline bool operator>=(signed long rhs)            const { return fmpz_cmp_si(mp,rhs) >= 0; }
+  inline bool operator>=(int rhs)                    const { return fmpz_cmp_si(mp,rhs) >= 0; }
 
 };
 
