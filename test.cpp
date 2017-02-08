@@ -9,13 +9,6 @@
 //   g++ -g -Wall -lflint -lgmp test.cpp -o test
 //
 
-bool t1(flint_mpz_class & a, int b, bool expected)
-{
-    if (a == b) {
-        std::cout << ""
-    }
-}
-
 int main()
 {
     std::cout << "FLINTpp test program!" << std::endl;
