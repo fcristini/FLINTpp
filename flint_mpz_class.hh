@@ -1,3 +1,5 @@
+// a lot of help for operators in 
+// http://en.cppreference.com/w/cpp/language/operators
 
 #ifndef flint_mpz_class_hh
 #define flint_mpz_class_hh 1
@@ -223,6 +225,39 @@ public:
   inline bool operator>=(unsigned long rhs)          const { return fmpz_cmp_ui(mp,rhs) >= 0; }
   inline bool operator>=(signed long rhs)            const { return fmpz_cmp_si(mp,rhs) >= 0; }
   inline bool operator>=(int rhs)                    const { return fmpz_cmp_si(mp,rhs) >= 0; }
+
+  // Arithmetic
+  flint_mpz_class & operator+=(const flint_mpz_class& rhs) { *this = *this + rhs; return *this; }
+  friend flint_mpz_class operator+(flint_mpz_class lhs, const flint_mpz_class& rhs) {
+    flint_mpz_class ret;
+    fmpz_add(ret.mp, lhs.mp, rhs.mp);
+    return ret;
+  }
+
+  inline flint_mpz_class & operator-=(const flint_mpz_class& rhs) { *this = *this - rhs; return *this; }
+  friend flint_mpz_class operator-(flint_mpz_class lhs, const flint_mpz_class& rhs) {
+    flint_mpz_class ret;
+    fmpz_sub(ret.mp, lhs.mp, rhs.mp);
+    return ret;
+  }
+  
+  inline flint_mpz_class & operator*=(const flint_mpz_class& rhs) { *this = *this * rhs; return *this; }
+  friend flint_mpz_class operator*(flint_mpz_class lhs, const flint_mpz_class& rhs) {
+    flint_mpz_class ret;
+    fmpz_mul(ret.mp, lhs.mp, rhs.mp);
+    return ret;
+  }
+  
+  inline flint_mpz_class & operator/=(const flint_mpz_class& rhs) { *this = *this / rhs; return *this; }
+  friend flint_mpz_class operator/(flint_mpz_class lhs, const flint_mpz_class& rhs) {
+    flint_mpz_class ret;
+    fmpz_cdiv_q(ret.mp, lhs.mp, rhs.mp);
+    // debug
+    //////std::cout << "Asked to divide " << lhs.get_str() << " by " << rhs.get_str() << "; ";
+    //////std::cout << "Got " << ret.get_str() <<   std::endl;
+
+    return ret;
+  }
 
 };
 
