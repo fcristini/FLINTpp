@@ -5,42 +5,13 @@
 #define flint_mpz_class_hh 1
 
 ///#include <stdexcept>
+#include <iostream>
 #include <string>
+#include <gmpxx.h>
 #include "flint/fmpz.h"
 
 #define __PPLITE_CONSTANT(X) __builtin_constant_p(X)
 #define __PPLITE_CONSTANT_TRUE(X) (__PPLITE_CONSTANT(X) && (X))
-/*
-#define __PPLITE_DECLARE_COMPOUND_OPERATOR(fun)    \
-  flint_mpz_class & fun(const flint_mpz_class &);  \
-  flint_mpz_class & fun(signed char);              \
-  flint_mpz_class & fun(unsigned char);            \
-  flint_mpz_class & fun(signed int);               \
-  flint_mpz_class & fun(unsigned int);             \
-  flint_mpz_class & fun(signed short int);         \
-  flint_mpz_class & fun(unsigned short int);       \
-  flint_mpz_class & fun(signed long int);          \
-  flint_mpz_class & fun(unsigned long int);        \
-  flint_mpz_class & fun(float);                    \
-  flint_mpz_class & fun(double);
-
-#define __PPLITE_DECLARE_INCREMENT_OPERATOR(fun) \
-  inline flint_mpz_class & fun();                \
-  inline flint_mpz_class fun(int);
-
-#define __PPLITE_DECLARE_COMPARISON_OPERATOR(fun)    \
-  friend bool fun(const flint_mpz_class &, const flint_mpz_class &);  \
-  friend bool fun(const flint_mpz_class &, signed char);              \
-  friend bool fun(const flint_mpz_class &, unsigned char);            \
-  friend bool fun(const flint_mpz_class &, signed int);               \
-  friend bool fun(const flint_mpz_class &, unsigned int);             \
-  friend bool fun(const flint_mpz_class &, signed short int);         \
-  friend bool fun(const flint_mpz_class &, unsigned short int);       \
-  friend bool fun(const flint_mpz_class &, signed long int);          \
-  friend bool fun(const flint_mpz_class &, unsigned long int);        \
-  friend bool fun(const flint_mpz_class &, float);                    \
-  friend bool fun(const flint_mpz_class &, double);
-*/
 
 class flint_mpz_class
 {
@@ -71,6 +42,9 @@ public:
     fmpz_init(z.mp);
   }
 #endif
+  flint_mpz_class(const mpz_class &z) { 
+    *this = z.get_str(); 
+  }
 
   explicit flint_mpz_class(const char *s, int base = 0)
   {
@@ -149,6 +123,7 @@ public:
   flint_mpz_class & operator=(signed long l) { assign_si(l); return *this; }
   flint_mpz_class & operator=(unsigned long l) { assign_ui(l); return *this; }
   flint_mpz_class & operator=(double d) { assign_d(d); return *this; }
+  flint_mpz_class & operator=(const mpz_class & z) { *this = z.get_str(); return *this; }
   flint_mpz_class & operator=(const char *s) {
     if (set_str (s, 0) != 0) {
       ///throw std::invalid_argument ("fmpz_set_str");
@@ -226,8 +201,44 @@ public:
   inline bool operator>=(signed long rhs)            const { return fmpz_cmp_si(mp,rhs) >= 0; }
   inline bool operator>=(int rhs)                    const { return fmpz_cmp_si(mp,rhs) >= 0; }
 
+  // bitwise operators
+  inline flint_mpz_class& operator>>(unsigned int exp) {  
+      fmpz_tdiv_q_2exp(this->mp, this->mp, exp);
+      return *this;
+  }
+
+  // iostreams
+  inline std::ostream& operator<<(std::ostream& os) {  
+      os << get_str();  
+      return os;  
+  }
+  inline friend std::ostream& operator<<(std::ostream& os, const flint_mpz_class & rhs) {  
+      os << rhs.get_str();  
+      return os;  
+  }
+  inline std::istream& operator>>(std::istream& is) {  
+      std::string s;
+      is >> s;
+      *this = s;
+      return is;  
+  }
+  inline friend std::istream& operator>>(std::istream& is, flint_mpz_class & rhs) {  
+      std::string s;
+      is >> s;
+      rhs = s;  
+      return is;  
+  }
+
   // Arithmetic
+  flint_mpz_class operator-() const {
+    flint_mpz_class ret;
+    fmpz_neg(ret.mp, this->mp);
+    return ret;
+  }
+
   flint_mpz_class & operator+=(const flint_mpz_class& rhs) { *this = *this + rhs; return *this; }
+  flint_mpz_class & operator++() { *this = *this + 1; return *this; }
+  const flint_mpz_class operator++(int) { flint_mpz_class temp(*this); ++*this; return temp; }
   friend flint_mpz_class operator+(flint_mpz_class lhs, const flint_mpz_class& rhs) {
     flint_mpz_class ret;
     fmpz_add(ret.mp, lhs.mp, rhs.mp);
@@ -235,6 +246,8 @@ public:
   }
 
   inline flint_mpz_class & operator-=(const flint_mpz_class& rhs) { *this = *this - rhs; return *this; }
+  flint_mpz_class & operator--() { *this = *this + 1; return *this; }
+  const flint_mpz_class operator--(int) { flint_mpz_class temp(*this); --*this; return temp; }
   friend flint_mpz_class operator-(flint_mpz_class lhs, const flint_mpz_class& rhs) {
     flint_mpz_class ret;
     fmpz_sub(ret.mp, lhs.mp, rhs.mp);
@@ -251,11 +264,33 @@ public:
   inline flint_mpz_class & operator/=(const flint_mpz_class& rhs) { *this = *this / rhs; return *this; }
   friend flint_mpz_class operator/(flint_mpz_class lhs, const flint_mpz_class& rhs) {
     flint_mpz_class ret;
-    fmpz_cdiv_q(ret.mp, lhs.mp, rhs.mp);
-    // debug
-    //////std::cout << "Asked to divide " << lhs.get_str() << " by " << rhs.get_str() << "; ";
-    //////std::cout << "Got " << ret.get_str() <<   std::endl;
+    fmpz_tdiv_q(ret.mp, lhs.mp, rhs.mp);
+    return ret;
+  }
+  
+  inline flint_mpz_class & operator%=(const flint_mpz_class& rhs) { *this = *this / rhs; return *this; }
+  friend flint_mpz_class operator%(flint_mpz_class lhs, const flint_mpz_class& rhs) {
+    flint_mpz_class ret;
+    fmpz_mod(ret.mp, lhs.mp, rhs.mp);
+    return ret;
+  }
 
+  // Some math
+  inline flint_mpz_class getAbs() const {
+    flint_mpz_class ret;
+    fmpz_abs(ret.mp, this->mp);
+    return ret;
+  }
+
+  inline flint_mpz_class getGCD(const flint_mpz_class& n1, const flint_mpz_class& n2) const {
+    flint_mpz_class ret;
+    fmpz_gcd(ret.mp, n1.mp, n2.mp);
+    return ret;
+  }
+
+  inline flint_mpz_class getLCM(const flint_mpz_class& n1, const flint_mpz_class& n2) const {
+    flint_mpz_class ret;
+    fmpz_lcm(ret.mp, n1.mp, n2.mp);
     return ret;
   }
 
